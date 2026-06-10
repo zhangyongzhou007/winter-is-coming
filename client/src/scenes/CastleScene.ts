@@ -11,12 +11,15 @@ import {
     getCastleCenter,
     gridToIso,
 } from '../castle/CastleLayout';
+import { BuildingApi, ResourceApi, UserBuildingData } from '../network/Api';
+import { HttpClient } from '../network/HttpClient';
 
 /**
  * 城堡主城场景 — 城堡内部俯视布局
  *
  * 中心是熔炉，周围分布 15 个建筑槽位。
  * 底部用等距菱形地面铺底，营造 2.5D 内部空间感。
+ * 加载后端建筑数据并渲染到对应槽位。
  */
 export class CastleScene extends Scene {
     /** 可拖拽的城堡容器（地面 + 建筑槽位） */
@@ -79,6 +82,11 @@ export class CastleScene extends Scene {
         // 8. 监听窗口大小变化
         window.addEventListener('resize', this.onResize);
 
+        // 9. 如果有token，加载后端数据
+        if (HttpClient.getToken()) {
+            this.loadServerData();
+        }
+
         console.log('[CastleScene] 城堡内部场景已加载');
     }
 
@@ -87,6 +95,49 @@ export class CastleScene extends Scene {
         this.removeChildren();
         this.slots = [];
         console.log('[CastleScene] 城堡场景已退出');
+    }
+
+    /**
+     * 从后端加载建筑和资源数据
+     */
+    private async loadServerData(): Promise<void> {
+        try {
+            // 并发加载建筑列表和资源
+            const [buildings, resource] = await Promise.all([
+                BuildingApi.getMyBuildings(),
+                ResourceApi.getMyResource(),
+            ]);
+
+            // 更新建筑到对应槽位
+            this.applyBuildingData(buildings);
+
+            // 更新HUD资源
+            this.hud.updateAllResources([
+                resource.grain,
+                resource.wood,
+                resource.stone,
+                resource.iron,
+                resource.coal,
+                resource.diamond,
+            ]);
+
+            console.log(`[CastleScene] 已加载 ${buildings.length} 个建筑`);
+        } catch (error) {
+            console.warn('[CastleScene] 加载服务端数据失败，使用离线模式:', error);
+        }
+    }
+
+    /**
+     * 将后端建筑数据应用到槽位上
+     */
+    private applyBuildingData(buildings: UserBuildingData[]): void {
+        buildings.forEach((b) => {
+            const slot = this.getSlot(b.positionIndex);
+            if (slot) {
+                slot.setBuilding(b.buildingKey, b.buildingName, b.level);
+                slot.setServerBuildingId(b.id);
+            }
+        });
     }
 
     /**
@@ -125,13 +176,15 @@ export class CastleScene extends Scene {
         CASTLE_SLOTS.forEach((slotConfig) => {
             const slot = new BuildingSlot(slotConfig);
 
-            // 注册点击回调（后续 Task 4/5 实现面板交互）
+            // 注册点击回调
             slot.onClick((clickedSlot) => {
                 const key = clickedSlot.getBuildingKey();
                 if (key) {
                     console.log(`[CastleScene] 点击建筑: ${key} Lv.${clickedSlot.getBuildingLevel()}`);
+                    // TODO: Task 5 实现 BuildingInfoPanel
                 } else {
                     console.log(`[CastleScene] 点击空槽位: #${clickedSlot.config.slotId} (${clickedSlot.config.category})`);
+                    // TODO: Task 5 实现 BuildPanel
                 }
             });
 
@@ -147,7 +200,7 @@ export class CastleScene extends Scene {
         const game = Game.getInstance();
         const center = getCastleCenter();
 
-        // 横屏：向右偏移一点（给右侧功能栏留空间）
+        // 横屏：向左偏移一点（给右侧功能栏留空间）
         const offsetX = -30;
         this.castleContainer.position.set(
             game.width / 2 - center.x + offsetX,
@@ -166,16 +219,23 @@ export class CastleScene extends Scene {
     };
 
     /**
-     * 获取指定槽位（供后续 Task 4/5 使用）
+     * 获取指定槽位
      */
     public getSlot(slotId: number): BuildingSlot | undefined {
         return this.slots.find((s) => s.config.slotId === slotId);
     }
 
     /**
-     * 获取所有槽位（供后续使用）
+     * 获取所有槽位
      */
     public getAllSlots(): BuildingSlot[] {
         return this.slots;
+    }
+
+    /**
+     * 刷新数据（建造/升级后调用）
+     */
+    public async refresh(): Promise<void> {
+        await this.loadServerData();
     }
 }

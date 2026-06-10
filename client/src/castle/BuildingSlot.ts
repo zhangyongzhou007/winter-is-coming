@@ -45,6 +45,9 @@ export class BuildingSlot extends Container {
     /** 等级文字 */
     private levelText: Text;
 
+    /** 后端建筑实例ID（用于升级/查详情） */
+    private serverBuildingId: number | null = null;
+
     /** 点击回调 */
     private clickCallback: ((slot: BuildingSlot) => void) | null = null;
 
@@ -175,6 +178,20 @@ export class BuildingSlot extends Container {
      */
     public getBuildingLevel(): number {
         return this.buildingLevel;
+    }
+
+    /**
+     * 设置后端建筑实例ID
+     */
+    public setServerBuildingId(id: number): void {
+        this.serverBuildingId = id;
+    }
+
+    /**
+     * 获取后端建筑实例ID
+     */
+    public getServerBuildingId(): number | null {
+        return this.serverBuildingId;
     }
 
     /**
