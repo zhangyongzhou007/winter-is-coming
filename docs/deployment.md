@@ -49,13 +49,14 @@
 | 字符集 | utf8mb4 / utf8mb4_general_ci |
 | 初始化脚本 | deploy/mysql/init.sql |
 
-### 数据表（共 11 张）
+### 数据表（共 15 张）
 
 | 表名 | 用途 |
 |------|------|
 | t_user | 用户表 |
 | t_game_save | 存档表 |
-| t_config_building | 建筑配置 |
+| t_config_building | 建筑配置（16种建筑） |
+| t_config_building_level | 建筑升级配置（每级消耗/产出） |
 | t_config_tech | 科技配置 |
 | t_config_hero | 英雄配置 |
 | t_config_hero_skill | 英雄技能配置 |
@@ -64,6 +65,8 @@
 | t_config_monster | 野怪配置 |
 | t_config_mine | 矿脉配置 |
 | t_notice | 公告表 |
+| t_user_building | 用户建筑实例 |
+| t_user_resource | 用户资源 |
 
 ## 常用运维命令
 
