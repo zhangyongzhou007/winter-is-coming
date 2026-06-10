@@ -49,12 +49,67 @@ CREATE TABLE IF NOT EXISTS t_config_building (
     base_cost_wood INT DEFAULT 0,
     base_cost_stone INT DEFAULT 0,
     base_cost_iron INT DEFAULT 0,
+    base_cost_coal INT DEFAULT 0 COMMENT '基础升级消耗煤炭',
     build_time_seconds INT DEFAULT 60,
+    unlock_furnace_level INT DEFAULT 0 COMMENT '解锁所需熔炉等级',
+    max_count INT DEFAULT 1 COMMENT '最大建造数量',
+    production_resource VARCHAR(16) DEFAULT NULL COMMENT '产出资源类型：grain/wood/stone/iron/coal',
+    base_production_per_hour INT DEFAULT 0 COMMENT '基础每小时产出量',
     description VARCHAR(256),
     status TINYINT DEFAULT 1,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uk_building_key (building_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 建筑升级配置表（每级的具体消耗/时间/产出）
+CREATE TABLE IF NOT EXISTS t_config_building_level (
+    id BIGINT PRIMARY KEY,
+    building_key VARCHAR(32) NOT NULL COMMENT '建筑key',
+    level INT NOT NULL COMMENT '建筑等级',
+    cost_grain INT DEFAULT 0 COMMENT '升级消耗粮食',
+    cost_wood INT DEFAULT 0 COMMENT '升级消耗木材',
+    cost_stone INT DEFAULT 0 COMMENT '升级消耗石材',
+    cost_iron INT DEFAULT 0 COMMENT '升级消耗铁矿',
+    cost_coal INT DEFAULT 0 COMMENT '升级消耗煤炭',
+    upgrade_time_seconds INT DEFAULT 60 COMMENT '升级耗时（秒）',
+    production_per_hour INT DEFAULT 0 COMMENT '该等级每小时产出',
+    hp_bonus INT DEFAULT 0 COMMENT '生命加成（城墙等）',
+    capacity_bonus INT DEFAULT 0 COMMENT '容量加成（仓库等）',
+    require_furnace_level INT DEFAULT 0 COMMENT '升到该级需要的熔炉等级',
+    status TINYINT DEFAULT 1,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_building_level (building_key, level)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 用户建筑表（用户已建造的建筑实例）
+CREATE TABLE IF NOT EXISTS t_user_building (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    building_key VARCHAR(32) NOT NULL COMMENT '建筑key',
+    level INT DEFAULT 0 COMMENT '建筑等级',
+    position_index INT DEFAULT 0 COMMENT '槽位编号',
+    status TINYINT DEFAULT 1 COMMENT '状态：1正常 2升级中',
+    upgrade_end_time DATETIME DEFAULT NULL COMMENT '升级完成时间',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 用户资源表
+CREATE TABLE IF NOT EXISTS t_user_resource (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    grain INT DEFAULT 0 COMMENT '粮食',
+    wood INT DEFAULT 0 COMMENT '木材',
+    stone INT DEFAULT 0 COMMENT '石材',
+    iron INT DEFAULT 0 COMMENT '铁矿',
+    coal INT DEFAULT 0 COMMENT '煤炭',
+    diamond INT DEFAULT 0 COMMENT '钻石',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 科技配置表
