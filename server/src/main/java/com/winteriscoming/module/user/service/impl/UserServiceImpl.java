@@ -3,6 +3,7 @@ package com.winteriscoming.module.user.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.winteriscoming.common.BizException;
 import com.winteriscoming.common.ErrorCode;
+import com.winteriscoming.module.building.service.BuildingService;
 import com.winteriscoming.module.user.dto.LoginDTO;
 import com.winteriscoming.module.user.dto.RegisterDTO;
 import com.winteriscoming.module.user.entity.User;
@@ -12,6 +13,7 @@ import com.winteriscoming.module.user.vo.LoginVO;
 import com.winteriscoming.module.user.vo.UserVO;
 import com.winteriscoming.util.JwtUtil;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -25,16 +27,19 @@ public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final JwtUtil jwtUtil;
+    private final BuildingService buildingService;
 
     /** 密码加盐前缀 */
     private static final String SALT = "winter_is_coming_";
 
-    public UserServiceImpl(UserMapper userMapper, JwtUtil jwtUtil) {
+    public UserServiceImpl(UserMapper userMapper, JwtUtil jwtUtil, BuildingService buildingService) {
         this.userMapper = userMapper;
         this.jwtUtil = jwtUtil;
+        this.buildingService = buildingService;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public UserVO register(RegisterDTO dto) {
         // 检查用户名是否已存在
         LambdaQueryWrapper<User> query = new LambdaQueryWrapper<>();
@@ -51,6 +56,9 @@ public class UserServiceImpl implements UserService {
         user.setLevel(1);
         user.setStatus(1);
         userMapper.insert(user);
+
+        // 初始化新用户游戏数据（Lv.0熔炉 + 初始资源）
+        buildingService.initNewUser(user.getId());
 
         return toUserVO(user);
     }

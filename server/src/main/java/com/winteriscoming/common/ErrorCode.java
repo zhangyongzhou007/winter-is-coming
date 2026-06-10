@@ -23,6 +23,17 @@ public enum ErrorCode {
 
     // 配置模块 2001-2099
     CONFIG_NOT_FOUND(2001, "配置不存在"),
+
+    // 建筑模块 3001-3099
+    BUILDING_NOT_FOUND(3001, "建筑不存在"),
+    BUILDING_CONFIG_NOT_FOUND(3002, "建筑配置不存在"),
+    BUILDING_MAX_COUNT(3003, "该建筑已达最大建造数量"),
+    BUILDING_FURNACE_LEVEL_LOW(3004, "熔炉等级不足，无法建造"),
+    BUILDING_RESOURCE_NOT_ENOUGH(3005, "资源不足"),
+    BUILDING_MAX_LEVEL(3006, "建筑已达最高等级"),
+    BUILDING_UPGRADING(3007, "建筑正在升级中"),
+    BUILDING_LEVEL_CONFIG_NOT_FOUND(3008, "建筑升级配置不存在"),
+    BUILDING_SLOT_OCCUPIED(3009, "该槽位已被占用"),
     ;
 
     private final int code;
