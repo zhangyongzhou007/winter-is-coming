@@ -1,0 +1,14 @@
+# ============================
+# 冷冬将至 - 客户端构建
+# ============================
+
+FROM node:20-alpine AS builder
+WORKDIR /build
+COPY client/package.json client/package-lock.json* ./
+RUN npm install
+COPY client/ .
+RUN npm run build
+
+# 输出构建产物到 /dist，由 docker-compose 挂载给 nginx
+FROM alpine:3.19
+COPY --from=builder /build/dist /dist
