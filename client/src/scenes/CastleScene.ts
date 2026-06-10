@@ -6,6 +6,7 @@ import { BottomBar } from '../ui/BottomBar';
 import { BuildingSlot } from '../castle/BuildingSlot';
 import { BuildingInfoPanel } from '../ui/panels/BuildingInfoPanel';
 import { BuildPanel } from '../ui/panels/BuildPanel';
+import { GuidePanel } from '../ui/panels/GuidePanel';
 import {
     CASTLE_SLOTS,
     CASTLE_TILE_WIDTH,
@@ -51,6 +52,9 @@ export class CastleScene extends Scene {
     /** 建造面板 */
     private buildPanel: BuildPanel;
 
+    /** 新手引导面板 */
+    private guidePanel: GuidePanel;
+
     /** 建筑配置缓存 */
     private buildingConfigs: BuildingConfig[] = [];
 
@@ -63,6 +67,7 @@ export class CastleScene extends Scene {
         this.bottomBar = new BottomBar();
         this.buildingInfoPanel = new BuildingInfoPanel();
         this.buildPanel = new BuildPanel();
+        this.guidePanel = new GuidePanel();
     }
 
     public onEnter(): void {
@@ -90,6 +95,7 @@ export class CastleScene extends Scene {
         // 6. 添加UI面板（在最上层）
         this.addChild(this.buildingInfoPanel);
         this.addChild(this.buildPanel);
+        this.addChild(this.guidePanel);
         this.setupPanelCallbacks();
 
         // 7. 注册拖拽 → 移动城堡视图
@@ -184,6 +190,19 @@ export class CastleScene extends Scene {
             ]);
 
             console.log(`[CastleScene] 已加载 ${buildings.length} 个建筑, ${configs.length} 种配置`);
+
+            // 新手引导：熔炉 Lv.0 时提示升级
+            const furnaceData = buildings.find((b) => b.buildingKey === 'furnace');
+            if (furnaceData && furnaceData.level === 0 && !localStorage.getItem('guide_done')) {
+                this.guidePanel.show(
+                    '🔥 欢迎来到冷冬将至',
+                    '你的城堡核心 —— 熔炉还未启动。点击中央的熔炉将它升级到 Lv.1，解锁猎人小屋和伐木场，开始采集资源吧！',
+                    '开始冒险'
+                );
+                this.guidePanel.onConfirmClick(() => {
+                    localStorage.setItem('guide_done', '1');
+                });
+            }
         } catch (error) {
             console.warn('[CastleScene] 加载服务端数据失败，使用离线模式:', error);
         }
